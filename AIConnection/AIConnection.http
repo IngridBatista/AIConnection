@@ -1,0 +1,6 @@
+@AIConnection_HostAddress = http://localhost:5153
+
+GET {{AIConnection_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
