@@ -1,13 +1,25 @@
+using Microsoft.Extensions.AI;
+using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Options;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenAI(options =>
-{
-    options.ApiKey = builder.Configuration["OpenAI:ApiKey"];
-});
+
+var apiKey = Environment.GetEnvironmentVariable("OPENAI_API_KEY");
+
+var cache = new MemoryDistributedCache(Options.Create(new MemoryDistributedCacheOptions()));
+
+builder.Services.AddChatClient(services =>
+    new OpenAI.Chat.ChatClient("gpt-5.1", apiKey).AsIChatClient())
+    .UseDistributedCache(cache);
+
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
@@ -16,6 +28,10 @@ if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
+
+app.UseSwagger();
+
+app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
 
