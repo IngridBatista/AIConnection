@@ -1,3 +1,4 @@
+using AIConnection.Services;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Caching.Memory;
@@ -17,6 +18,8 @@ var cache = new MemoryDistributedCache(Options.Create(new MemoryDistributedCache
 builder.Services.AddChatClient(services =>
     new OpenAI.Chat.ChatClient("gpt-5.1", apiKey).AsIChatClient())
     .UseDistributedCache(cache);
+
+builder.Services.AddHttpClient<ClaudeService>();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();

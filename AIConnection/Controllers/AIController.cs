@@ -1,3 +1,4 @@
+using AIConnection.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.AI;
 using System.Text.RegularExpressions;
@@ -9,10 +10,12 @@ namespace AIConnection.Controllers
     public class AIController : ControllerBase
     {
         private readonly IChatClient _chatClient;
+        private readonly ClaudeService _claudeService;
 
-        public AIController(IChatClient chatClient)
+        public AIController(IChatClient chatClient, ClaudeService claudeService)
         {
             _chatClient = chatClient;
+            _claudeService = claudeService;
         }
 
         [HttpPost("geracao-codigo/openAI/gtp5")]
@@ -44,5 +47,31 @@ namespace AIConnection.Controllers
             return Ok(response.Text);
         }
 
+        [HttpPost("geracao-codigo/claude/sonnet4.5")]
+        public async Task<IActionResult> SendMessage([FromBody] string question)
+        {
+            try
+            {
+                var response = await _claudeService.SendMessageWithSystemAsync(
+                    userMessage: question,
+                    systemPrompt: null,
+                    model: "claude-sonnet-4-5-20250929",
+                    temperature: null,
+                    maxTokens: 1024
+                );
+
+                var textResponse = response.Content.FirstOrDefault()?.Text ?? string.Empty;
+
+                return Ok(textResponse);
+            }
+            catch (HttpRequestException ex)
+            {
+                return StatusCode(503, new { error = "Service unavailable", details = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = "Internal server error", details = ex.Message });
+            }
+        }
     }
 }
