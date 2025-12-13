@@ -9,19 +9,24 @@ namespace AIConnection.Controllers
     [Route("api/[controller]")]
     public class AIController : ControllerBase
     {
-        private readonly IChatClient _chatClient;
+        private readonly IChatClient _openAiClient;
+        private readonly IChatClient _geminiClient;
         private readonly ClaudeService _claudeService;
 
-        public AIController(IChatClient chatClient, ClaudeService claudeService)
+        public AIController(
+            [FromKeyedServices("openai")] IChatClient openAiClient, 
+            [FromKeyedServices("gemini")] IChatClient geminiClient,
+            ClaudeService claudeService)
         {
-            _chatClient = chatClient;
+            _openAiClient = openAiClient;
+            _geminiClient = geminiClient;
             _claudeService = claudeService;
         }
 
         [HttpPost("geracao-codigo/openAI/gtp5")]
-        public async Task<IActionResult> OpenAIGpt5([FromBody] string question)
+        public async Task<IActionResult> OpenAIGpt([FromBody] string question)
         {
-            var response = await _chatClient.GetResponseAsync(question);
+            var response = await _openAiClient.GetResponseAsync(question);
 
             var match = Regex.Match(response.Text, @"```csharp([\s\S]*?)```");
 
@@ -48,7 +53,7 @@ namespace AIConnection.Controllers
         }
 
         [HttpPost("geracao-codigo/claude/sonnet4.5")]
-        public async Task<IActionResult> SendMessage([FromBody] string question)
+        public async Task<IActionResult> ClaudeSonnet([FromBody] string question)
         {
             try
             {
@@ -72,6 +77,14 @@ namespace AIConnection.Controllers
             {
                 return StatusCode(500, new { error = "Internal server error", details = ex.Message });
             }
+        }
+
+        [HttpPost("geracao-codigo/google/gemini2.5")]
+        public async Task<IActionResult> GoogleGemini([FromBody] string question)
+        {
+            var response = await _geminiClient.GetResponseAsync(question);
+
+            return Ok(response.Text);
         }
     }
 }
