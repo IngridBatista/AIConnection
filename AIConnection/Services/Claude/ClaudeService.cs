@@ -1,9 +1,9 @@
-﻿using AIConnection.Dtos;
+﻿using AIConnection.Dtos.LLM.Claude;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace AIConnection.Services;
+namespace AIConnection.Services.Claude;
 
 public class ClaudeService
 {

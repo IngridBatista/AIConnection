@@ -1,7 +1,8 @@
+using AIConnection.Dtos.LLM;
 using AIConnection.Services;
+using AIConnection.Services.Claude;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.AI;
-using System.Text.RegularExpressions;
 
 namespace AIConnection.Controllers
 {
@@ -14,7 +15,7 @@ namespace AIConnection.Controllers
         private readonly ClaudeService _claudeService;
 
         public AIController(
-            [FromKeyedServices("openai")] IChatClient openAiClient, 
+            [FromKeyedServices("openai")] IChatClient openAiClient,
             [FromKeyedServices("gemini")] IChatClient geminiClient,
             ClaudeService claudeService)
         {
@@ -24,41 +25,33 @@ namespace AIConnection.Controllers
         }
 
         [HttpPost("geracao-codigo/openAI/gtp5")]
-        public async Task<IActionResult> OpenAIGpt([FromBody] string question)
+        public async Task<IActionResult> OpenAIGpt([FromBody] LargeLanguageModelRequest llmRequest)
         {
-            var response = await _openAiClient.GetResponseAsync(question);
-
-            var match = Regex.Match(response.Text, @"```csharp([\s\S]*?)```");
-
-            if (!match.Success)
+            try
             {
-                Console.WriteLine("Bloco csharp não encontrado.");
+                var response = await _openAiClient.GetResponseAsync(llmRequest.Propmpt);
+
+                ClassGenerationService.CreateClassFile(llmRequest, response.Text);
+
+                return Ok(response.Text);
             }
-
-            string code = match.Groups[1].Value.Trim();
-
-            var classMatch = Regex.Match(code, @"class\s+([A-Za-z_][A-Za-z0-9_]*)");
-
-            if (!classMatch.Success)
+            catch (HttpRequestException ex)
             {
-                Console.WriteLine("Nenhuma classe encontrada no código.");
+                return StatusCode(503, new { error = "Service unavailable", details = ex.Message });
             }
-
-            string className = classMatch.Groups[1].Value;
-            string fileName = className + ".cs";
-
-            System.IO.File.WriteAllText(fileName, code);
-
-            return Ok(response.Text);
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = "Internal server error", details = ex.Message });
+            }
         }
 
         [HttpPost("geracao-codigo/claude/sonnet4.5")]
-        public async Task<IActionResult> ClaudeSonnet([FromBody] string question)
+        public async Task<IActionResult> ClaudeSonnet([FromBody] LargeLanguageModelRequest llmRequest)
         {
             try
             {
                 var response = await _claudeService.SendMessageWithSystemAsync(
-                    userMessage: question,
+                    userMessage: llmRequest.Propmpt,
                     systemPrompt: null,
                     model: "claude-sonnet-4-5-20250929",
                     temperature: null,
@@ -66,6 +59,8 @@ namespace AIConnection.Controllers
                 );
 
                 var textResponse = response.Content.FirstOrDefault()?.Text ?? string.Empty;
+
+                ClassGenerationService.CreateClassFile(llmRequest, textResponse);
 
                 return Ok(textResponse);
             }
@@ -80,11 +75,24 @@ namespace AIConnection.Controllers
         }
 
         [HttpPost("geracao-codigo/google/gemini2.5")]
-        public async Task<IActionResult> GoogleGemini([FromBody] string question)
+        public async Task<IActionResult> GoogleGemini([FromBody] LargeLanguageModelRequest llmRequest)
         {
-            var response = await _geminiClient.GetResponseAsync(question);
+            try
+            {
+                var response = await _geminiClient.GetResponseAsync(llmRequest.Propmpt);
 
-            return Ok(response.Text);
+                ClassGenerationService.CreateClassFile(llmRequest, response.Text);
+
+                return Ok(response.Text);
+            }
+            catch (HttpRequestException ex)
+            {
+                return StatusCode(503, new { error = "Service unavailable", details = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = "Internal server error", details = ex.Message });
+            }
         }
     }
 }

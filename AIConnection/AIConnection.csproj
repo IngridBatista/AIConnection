@@ -9,10 +9,23 @@
   <ItemGroup>
     <PackageReference Include="GeminiDotnet.Extensions.AI" Version="0.18.0" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="5.0.0" />
     <PackageReference Include="Microsoft.Extensions.AI" Version="10.0.1" />
     <PackageReference Include="Microsoft.Extensions.AI.Abstractions" Version="10.0.1" />
     <PackageReference Include="Microsoft.Extensions.AI.OpenAI" Version="10.0.1-preview.1.25571.5" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="10.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="GeneratedCode\Claude\ArrayDifference\" />
+    <Folder Include="GeneratedCode\Claude\StringArrayEncoding\" />
+    <Folder Include="GeneratedCode\Claude\SequenceComparison\" />
+    <Folder Include="GeneratedCode\Gemini\ArrayDifference\" />
+    <Folder Include="GeneratedCode\Gemini\StringArrayEncoding\" />
+    <Folder Include="GeneratedCode\Gemini\SequenceComparison\" />
+    <Folder Include="GeneratedCode\Gpt\ArrayDifference\" />
+    <Folder Include="GeneratedCode\Gpt\StringArrayEncoding\" />
+    <Folder Include="GeneratedCode\Gpt\SequenceComparison\" />
   </ItemGroup>
 
 </Project>

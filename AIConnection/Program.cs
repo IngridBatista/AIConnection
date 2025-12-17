@@ -1,4 +1,4 @@
-﻿using AIConnection.Services;
+﻿using AIConnection.Services.Claude;
 using GeminiDotnet;
 using GeminiDotnet.Extensions.AI;
 using Microsoft.Extensions.AI;

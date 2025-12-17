@@ -1,7 +1,7 @@
 ﻿using AIConnection.Services;
 using System.Text.Json.Serialization;
 
-namespace AIConnection.Dtos
+namespace AIConnection.Dtos.LLM.Claude
 {
     public class ClaudeRequest
     {
