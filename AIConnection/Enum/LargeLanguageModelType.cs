@@ -4,6 +4,7 @@
     {
         GTP = 1,
         CLAUDE,
-        GEMINI
+        GEMINI,
+        DEEPSEEK
     }
 }

@@ -155,6 +155,9 @@ namespace AIConnection.Services
                 case LargeLanguageModelType.GEMINI:
                     llmIdentifier = "Gemini";
                     break;
+                case LargeLanguageModelType.DEEPSEEK:
+                    llmIdentifier = "DeepSeek";
+                    break;
             }
 
             return llmIdentifier;

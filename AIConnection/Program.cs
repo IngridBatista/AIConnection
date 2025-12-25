@@ -5,6 +5,8 @@ using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
+using OpenAI;
+using System.ClientModel;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -35,6 +37,25 @@ builder.Services.AddKeyedSingleton<IChatClient>("gemini", (sp, key) =>
         ApiKey = apiKey,
         ModelId = "gemini-2.0-flash-exp"
     });
+});
+
+builder.Services.AddKeyedSingleton<IChatClient>("deepseek", (sp, key) =>
+{
+    var apiKey = Environment.GetEnvironmentVariable("DEEPSEEK_API_KEY")
+        ?? throw new InvalidOperationException("DEEPSEEK_API_KEY not configured");
+
+    var openAiOptions = new OpenAIClientOptions
+    {
+        Endpoint = new Uri("https://api.deepseek.com/v1")
+    };
+
+    var credential = new ApiKeyCredential(apiKey);
+
+    var openAiClient = new OpenAIClient(credential, openAiOptions);
+
+    return openAiClient
+        .GetChatClient("deepseek-coder")
+        .AsIChatClient();
 });
 
 builder.Services.AddHttpClient<ClaudeService>();

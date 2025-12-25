@@ -12,15 +12,18 @@ namespace AIConnection.Controllers
     {
         private readonly IChatClient _openAiClient;
         private readonly IChatClient _geminiClient;
+        private readonly IChatClient _deepSeekClient;
         private readonly ClaudeService _claudeService;
 
         public AIController(
             [FromKeyedServices("openai")] IChatClient openAiClient,
             [FromKeyedServices("gemini")] IChatClient geminiClient,
+            [FromKeyedServices("deepseek")] IChatClient deepSeekClient,
             ClaudeService claudeService)
         {
             _openAiClient = openAiClient;
             _geminiClient = geminiClient;
+            _deepSeekClient = deepSeekClient;
             _claudeService = claudeService;
         }
 
@@ -80,6 +83,27 @@ namespace AIConnection.Controllers
             try
             {
                 var response = await _geminiClient.GetResponseAsync(llmRequest.Propmpt);
+
+                ClassGenerationService.CreateClassFile(llmRequest, response.Text);
+
+                return Ok(response.Text);
+            }
+            catch (HttpRequestException ex)
+            {
+                return StatusCode(503, new { error = "Service unavailable", details = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = "Internal server error", details = ex.Message });
+            }
+        }
+
+        [HttpPost("geracao-codigo/deepseek/deepseek-code")]
+        public async Task<IActionResult> DeepSeekCode([FromBody] LargeLanguageModelRequest llmRequest)
+        {
+            try
+            {
+                var response = await _deepSeekClient.GetResponseAsync(llmRequest.Propmpt);
 
                 ClassGenerationService.CreateClassFile(llmRequest, response.Text);
 

@@ -20,6 +20,9 @@
     <Folder Include="GeneratedCode\Claude\ArrayDifference\" />
     <Folder Include="GeneratedCode\Claude\StringArrayEncoding\" />
     <Folder Include="GeneratedCode\Claude\SequenceComparison\" />
+    <Folder Include="GeneratedCode\DeepSeek\ArrayDifference\" />
+    <Folder Include="GeneratedCode\DeepSeek\StringArrayEncoding\" />
+    <Folder Include="GeneratedCode\DeepSeek\SequenceComparison\" />
     <Folder Include="GeneratedCode\Gemini\ArrayDifference\" />
     <Folder Include="GeneratedCode\Gemini\StringArrayEncoding\" />
     <Folder Include="GeneratedCode\Gemini\SequenceComparison\" />
