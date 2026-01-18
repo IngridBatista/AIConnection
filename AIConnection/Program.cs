@@ -2,9 +2,6 @@
 using GeminiDotnet;
 using GeminiDotnet.Extensions.AI;
 using Microsoft.Extensions.AI;
-using Microsoft.Extensions.Caching.Distributed;
-using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Options;
 using OpenAI;
 using System.ClientModel;
 
@@ -14,8 +11,6 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-
-var cache = new MemoryDistributedCache(Options.Create(new MemoryDistributedCacheOptions()));
 
 builder.Services.AddKeyedSingleton<IChatClient>("openai", (sp, key) =>
 {
@@ -35,7 +30,7 @@ builder.Services.AddKeyedSingleton<IChatClient>("gemini", (sp, key) =>
     return new GeminiChatClient(new GeminiClientOptions
     {
         ApiKey = apiKey,
-        ModelId = "gemini-2.0-flash-exp"
+        ModelId = "gemini-2.5-pro"
     });
 });
 
