@@ -1,5 +1,5 @@
 using AIConnection.Dtos.LLM;
-using AIConnection.Services;
+using AIConnection.Services.ClassGeneration;
 using AIConnection.Services.Claude;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.AI;
@@ -10,6 +10,8 @@ namespace AIConnection.Controllers
     [Route("api/[controller]")]
     public class AIController : ControllerBase
     {
+        private const float DEFAULT_TEMPERATURE = 0.0f;
+
         private readonly IChatClient _openAiClient;
         private readonly IChatClient _geminiClient;
         private readonly IChatClient _deepSeekClient;
@@ -32,7 +34,12 @@ namespace AIConnection.Controllers
         {
             try
             {
-                var response = await _openAiClient.GetResponseAsync(llmRequest.Propmpt);
+                var options = new ChatOptions
+                {
+                    Temperature = DEFAULT_TEMPERATURE
+                };
+
+                var response = await _openAiClient.GetResponseAsync(llmRequest.Propmpt, options);
 
                 ClassGenerationService.CreateClassFile(llmRequest, response.Text);
 
@@ -49,16 +56,17 @@ namespace AIConnection.Controllers
         }
 
         [HttpPost("geracao-codigo/claude/sonnet4.5")]
-        public async Task<IActionResult> ClaudeSonnet([FromBody] LargeLanguageModelRequest llmRequest)
+        public async Task<IActionResult> ClaudeSonnet([FromBody] LargeLanguageModelRequest llmRequest, CancellationToken cancellationToken)
         {
             try
             {
                 var response = await _claudeService.SendMessageWithSystemAsync(
                     userMessage: llmRequest.Propmpt,
-                    systemPrompt: null,
+                    systemPrompt: string.Empty,
                     model: "claude-sonnet-4-5-20250929",
-                    temperature: null,
-                    maxTokens: 1024
+                    temperature: 0.0,
+                    maxTokens: 1024,
+                    cancellationToken: cancellationToken
                 );
 
                 var textResponse = response.Content.FirstOrDefault()?.Text ?? string.Empty;
@@ -82,7 +90,12 @@ namespace AIConnection.Controllers
         {
             try
             {
-                var response = await _geminiClient.GetResponseAsync(llmRequest.Propmpt);
+                var options = new ChatOptions
+                {
+                    Temperature = DEFAULT_TEMPERATURE
+                };
+
+                var response = await _geminiClient.GetResponseAsync(llmRequest.Propmpt, options);
 
                 ClassGenerationService.CreateClassFile(llmRequest, response.Text);
 
@@ -103,7 +116,12 @@ namespace AIConnection.Controllers
         {
             try
             {
-                var response = await _deepSeekClient.GetResponseAsync(llmRequest.Propmpt);
+                var options = new ChatOptions
+                {
+                    Temperature = DEFAULT_TEMPERATURE
+                };
+
+                var response = await _deepSeekClient.GetResponseAsync(llmRequest.Propmpt, options);
 
                 ClassGenerationService.CreateClassFile(llmRequest, response.Text);
 
