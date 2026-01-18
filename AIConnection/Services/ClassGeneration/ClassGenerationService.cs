@@ -4,7 +4,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using System.Text.RegularExpressions;
 
-namespace AIConnection.Services
+namespace AIConnection.Services.ClassGeneration
 {
     public static class ClassGenerationService
     {
