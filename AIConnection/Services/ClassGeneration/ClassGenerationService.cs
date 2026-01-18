@@ -60,10 +60,11 @@ namespace AIConnection.Services.ClassGeneration
             }
 
             code = FormatCSharp(code);
-
-            string questionIdentifier = RetrieveQuestionIdentifier(llmRequest.QuestionIdentifier);
+            
             string llmIdentifier = RetrieveLlmIdentifier(llmRequest.LargeLanguageModel);
-            string fileName = $"GeneratedCode/{llmIdentifier}/{questionIdentifier}/{className}.cs";
+            string questionIdentifier = RetrieveQuestionIdentifier(llmRequest.QuestionIdentifier);
+            string participantIdentifier = RetrieveParticipantIdentifier(llmRequest.Participant);
+            string fileName = $"GeneratedCode/{llmIdentifier}/{questionIdentifier}/{participantIdentifier}/{className}.cs";
 
             File.WriteAllText(fileName, code);
         }
@@ -161,6 +162,38 @@ namespace AIConnection.Services.ClassGeneration
             }
 
             return llmIdentifier;
+        }
+
+        private static string RetrieveParticipantIdentifier(string participant)
+        {
+            string paricipantIdentifier = string.Empty;
+
+            switch (participant.ToUpper())
+            {
+                case "PARTICIPANT_1":
+                    paricipantIdentifier = "Participant_1";
+                    break;
+                case "PARTICIPANT_2":
+                    paricipantIdentifier = "Participant_2";
+                    break;
+                case "PARTICIPANT_3":
+                    paricipantIdentifier = "Participant_3";
+                    break;
+                case "PARTICIPANT_4":
+                    paricipantIdentifier = "Participant_4";
+                    break;
+                case "PARTICIPANT_5":
+                    paricipantIdentifier = "Participant_5";
+                    break;
+                case "PARTICIPANT_6":
+                    paricipantIdentifier = "Participant_6";
+                    break;
+                case "PARTICIPANT_7":
+                    paricipantIdentifier = "Participant_7";
+                    break;
+            }
+
+            return paricipantIdentifier;
         }
     }
 }
