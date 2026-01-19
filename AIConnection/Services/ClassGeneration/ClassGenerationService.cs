@@ -8,19 +8,48 @@ namespace AIConnection.Services.ClassGeneration
 {
     public static class ClassGenerationService
     {
+        private const string CODIGO_COMPLETO = "Código completo";
+
         public static void CreateClassFile(LargeLanguageModelRequest llmRequest, string llmResponse)
         {
-            var match = Regex.Match(llmResponse, @"```csharp([\s\S]*?)```", RegexOptions.IgnoreCase);
+            if (llmResponse.Contains(CODIGO_COMPLETO))
+            {
+                int index = llmResponse.IndexOf(CODIGO_COMPLETO);
 
+                llmResponse = index >= 0 ? llmResponse[(index)..].Trim() : llmResponse;
+
+                var matches = Regex.Matches(llmResponse, @"```csharp([\s\S]*?)```", RegexOptions.Multiline);
+
+                foreach (Match match in matches)
+                {
+                    (string code, string className) result = NormalizeClass(llmRequest, match);
+
+                    CreateFile(llmRequest, result.className, result.code);
+                }
+            }
+            else
+            {
+                var match = Regex.Match(llmResponse, @"```csharp([\s\S]*?)```", RegexOptions.IgnoreCase);
+
+                (string code, string className) result = NormalizeClass(llmRequest, match);
+
+                CreateFile(llmRequest, result.className, result.code);
+            }
+        }
+
+        private static (string, string) NormalizeClass(LargeLanguageModelRequest llmRequest, Match match)
+        {
             if (!match.Success)
+            {
                 throw new InvalidOperationException("Bloco csharp não encontrado.");
+            }
 
             string code = match.Groups[1].Value.Trim();
             code = NormalizeIndentation(code);
 
-            bool hasClass = Regex.IsMatch(code, @"\bclass\s+[A-Za-z_][A-Za-z0-9_]*\b");
-
             string className = string.Empty;
+
+            bool hasClass = Regex.IsMatch(code, @"\bclass\s+[A-Za-z_][A-Za-z0-9_]*\b");
 
             if (!hasClass)
             {
@@ -36,21 +65,24 @@ namespace AIConnection.Services.ClassGeneration
             else
             {
                 var classMatch = Regex.Match(code, @"class\s+([A-Za-z_][A-Za-z0-9_]*)");
+
                 if (!classMatch.Success)
+                {
                     throw new InvalidOperationException("Classe não encontrada.");
+                }
 
                 className = classMatch.Groups[1].Value;
             }
 
             var usingMatches = Regex.Matches(code, @"^using\s+[A-Za-z0-9_.]+;\s*$", RegexOptions.Multiline);
             string usings = string.Join(Environment.NewLine, usingMatches.Select(m => m.Value.Trim()));
-            code = Regex.Replace(code, @"^using\s+[A-Za-z0-9_.]+;\s*$\r?\n?", "", RegexOptions.Multiline).Trim();
-
+            
             string namespaceName = $"{llmRequest.LargeLanguageModel}.{llmRequest.QuestionIdentifier}.{llmRequest.Seniority}.{llmRequest.Participant.ToUpper()}";
             bool hasNamespace = Regex.IsMatch(code, @"namespace\s+[A-Za-z_][A-Za-z0-9_.]*");
 
             if (!hasNamespace)
             {
+                code = Regex.Replace(code, @"^using\s+[A-Za-z0-9_.]+;\s*$\r?\n?", "", RegexOptions.Multiline).Trim();
                 code =
             $@"{usings}
             namespace {namespaceName}
@@ -60,21 +92,15 @@ namespace AIConnection.Services.ClassGeneration
             }
 
             code = FormatCSharp(code);
-            
-            string llmIdentifier = RetrieveLlmIdentifier(llmRequest.LargeLanguageModel);
-            string questionIdentifier = RetrieveQuestionIdentifier(llmRequest.QuestionIdentifier);
-            string participantIdentifier = RetrieveParticipantIdentifier(llmRequest.Participant);
-            string fileName = $"GeneratedCode/{llmIdentifier}/{questionIdentifier}/{participantIdentifier}/{className}.cs";
 
-            File.WriteAllText(fileName, code);
+            return (code, className);
         }
 
         private static string IndentCode(string code, int level)
         {
             var indent = new string(' ', level * 4);
 
-            return string.Join(
-                Environment.NewLine,
+            return string.Join(Environment.NewLine,
                 code.Split(Environment.NewLine)
                     .Select(line =>
                         string.IsNullOrWhiteSpace(line)
@@ -113,10 +139,7 @@ namespace AIConnection.Services.ClassGeneration
         {
             var tree = CSharpSyntaxTree.ParseText(code);
 
-            var root = tree.GetRoot()
-                .NormalizeWhitespace(
-                    indentation: "    ",
-                    eol: Environment.NewLine);
+            var root = tree.GetRoot().NormalizeWhitespace(indentation: "    ", eol: Environment.NewLine);
 
             return root.ToFullString();
         }
@@ -194,6 +217,27 @@ namespace AIConnection.Services.ClassGeneration
             }
 
             return paricipantIdentifier;
+        }
+
+        private static void CreateFile(LargeLanguageModelRequest llmRequest, string className, string code)
+        {
+            string llmIdentifier = RetrieveLlmIdentifier(llmRequest.LargeLanguageModel);
+            string questionIdentifier = RetrieveQuestionIdentifier(llmRequest.QuestionIdentifier);
+            string participantIdentifier = RetrieveParticipantIdentifier(llmRequest.Participant);
+
+            string folderPath = Path.Combine("..", "..", "GeneratedCodeByAI", "GeneratedCodeByAI", "GeneratedCode", llmIdentifier, questionIdentifier, participantIdentifier);
+            string filePath = Path.Combine(folderPath, $"{className}.cs");
+
+
+            if (File.Exists(folderPath))
+            {
+                int index = folderPath.IndexOf(".cs");
+                folderPath = index >= 0 ? folderPath.Substring(0, index) : folderPath;
+
+                folderPath = $"{folderPath}_.cs";
+            }
+
+            File.WriteAllText(filePath, code);
         }
     }
 }
