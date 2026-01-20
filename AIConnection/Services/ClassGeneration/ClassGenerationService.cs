@@ -2,6 +2,8 @@
 using AIConnection.Enum;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.Formatting;
+using Microsoft.CodeAnalysis.Host.Mef;
 using System.Text.RegularExpressions;
 
 namespace AIConnection.Services.ClassGeneration
@@ -76,7 +78,7 @@ namespace AIConnection.Services.ClassGeneration
 
             var usingMatches = Regex.Matches(code, @"^using\s+[A-Za-z0-9_.]+;\s*$", RegexOptions.Multiline);
             string usings = string.Join(Environment.NewLine, usingMatches.Select(m => m.Value.Trim()));
-            
+
             string namespaceName = $"{llmRequest.LargeLanguageModel}.{llmRequest.QuestionIdentifier}.{llmRequest.Seniority}.{llmRequest.Participant.ToUpper()}";
             bool hasNamespace = Regex.IsMatch(code, @"namespace\s+[A-Za-z_][A-Za-z0-9_.]*");
 
@@ -89,6 +91,11 @@ namespace AIConnection.Services.ClassGeneration
             {{
             {IndentCode(NormalizeIndentation(code), 1)}
             }}";
+            }
+
+            else
+            {
+                code = IndentCode(NormalizeIndentation(code), 1);
             }
 
             code = FormatCSharp(code);
@@ -138,10 +145,13 @@ namespace AIConnection.Services.ClassGeneration
         private static string FormatCSharp(string code)
         {
             var tree = CSharpSyntaxTree.ParseText(code);
+            var root = tree.GetRoot();
 
-            var root = tree.GetRoot().NormalizeWhitespace(indentation: "    ", eol: Environment.NewLine);
+            using var workspace = new AdhocWorkspace(MefHostServices.DefaultHost);
 
-            return root.ToFullString();
+            var formattedRoot = Microsoft.CodeAnalysis.Formatting.Formatter.Format(root, workspace);
+
+            return formattedRoot.ToFullString();
         }
 
         private static string RetrieveQuestionIdentifier(QuestionType questionType)
