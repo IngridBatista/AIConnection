@@ -65,7 +65,7 @@ namespace AIConnection.Controllers
                     systemPrompt: string.Empty,
                     model: "claude-sonnet-4-5-20250929",
                     temperature: 0.0,
-                    maxTokens: 1024,
+                    maxTokens: 6000,
                     cancellationToken: cancellationToken
                 );
 

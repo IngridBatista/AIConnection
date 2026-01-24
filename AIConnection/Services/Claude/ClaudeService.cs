@@ -29,7 +29,7 @@ public class ClaudeService
         string? systemPrompt = null,
         string model = "claude-sonnet-4-5-20250929",
         double? temperature = null,
-        int maxTokens = 1024,
+        int maxTokens = 6000,
         CancellationToken cancellationToken = default)
     {
         var request = new ClaudeRequest
