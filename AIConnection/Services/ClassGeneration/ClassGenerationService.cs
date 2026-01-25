@@ -10,15 +10,15 @@ namespace AIConnection.Services.ClassGeneration
 {
     public static class ClassGenerationService
     {
+        private const string GENERATED_CODE_BY_AI = "GeneratedCodeByAI";
         private const string CODIGO_COMPLETO = "CÓDIGO COMPLETO";
-        private const string IMPLEMETACAO_COMPLETA = "IMPLEMENTAÇÃO COMPLETA";
         private const string SOLUCAO_RECOMENDADA = "SOLUÇÃO RECOMENDADA";
         private const string RECOMENDADO = "RECOMENDADO";
         private const string MAIS_CONCISA = "MAIS CONCISA";
+        private const string EXEMPLO = "EXEMPLO DE USO";
 
         private static readonly string[] completeSolutionKey = [
-            CODIGO_COMPLETO,
-            IMPLEMETACAO_COMPLETA
+            CODIGO_COMPLETO
         ];
 
         private static readonly string[] recommendedSolutionKey = [
@@ -50,7 +50,7 @@ namespace AIConnection.Services.ClassGeneration
                 llmResponse = index >= 0 ? llmResponse[(index)..].Trim() : llmResponse;
 
                 var matches = Regex.Matches(llmResponse, @"```csharp([\s\S]*?)```", RegexOptions.Multiline);
-
+                
                 foreach (Match match in matches)
                 {
                     (string code, string className) result = NormalizeClass(llmRequest, match);
@@ -86,10 +86,12 @@ namespace AIConnection.Services.ClassGeneration
                         )
                     ).Select(l => l.Trim()).ToList();
 
-                    int successfulMatchCount = 0; 
+                    int successfulMatchCount = 0;
 
-                    foreach (var item in wordList)
+                    for (int i = 0; i < wordList.Count; i++)
                     {
+                        var item = wordList[i];
+
                         if (!item.ToUpper().Contains("ANÁLISE") && !item.ToUpper().Contains("EXEMPLO")
                             && !item.ToUpper().Contains("COMPILAR") && !item.ToUpper().Contains("COMPILAÇÃO")
                             && !item.ToUpper().Contains("EXECUTAR") && !item.ToUpper().Contains("EXECUÇÃO")
@@ -97,11 +99,32 @@ namespace AIConnection.Services.ClassGeneration
                         {
                             int index = llmResponse.IndexOf(item);
 
-                            var newLlmResponse = index >= 0 ? llmResponse[(index)..].Trim() : llmResponse;
+                            if (index < 0)
+                            {
+                                continue;
+                            }
+
+                            int nextIndex;
+
+                            if (i < wordList.Count - 1)
+                            {
+                                nextIndex = llmResponse.IndexOf(wordList[i + 1], index + item.Length, StringComparison.OrdinalIgnoreCase);
+
+                                if (nextIndex < 0)
+                                {
+                                    nextIndex = llmResponse.Length;
+                                }
+                            }
+                            else
+                            {
+                                nextIndex = llmResponse.Length;
+                            }
+
+                            var newLlmResponse = llmResponse[index..nextIndex].Trim();
 
                             var match = Regex.Match(newLlmResponse, @"```csharp([\s\S]*?)```", RegexOptions.IgnoreCase);
 
-                            if (!match.Success || newLlmResponse.ToUpper().Contains("EXEMPLO"))
+                            if (!match.Success || newLlmResponse.ToUpper().Contains(EXEMPLO, StringComparison.OrdinalIgnoreCase))
                             {
                                 continue;
                             }
@@ -150,7 +173,9 @@ namespace AIConnection.Services.ClassGeneration
 
             if (!hasClass)
             {
-                string fallbackClassName = $"{llmRequest.LargeLanguageModel}_{llmRequest.QuestionIdentifier}_{llmRequest.Seniority}_{llmRequest.Participant.ToUpper()}";
+                string fallbackClassNameRaw = $"{llmRequest.LargeLanguageModel}_{llmRequest.QuestionIdentifier}_{llmRequest.Seniority}_{llmRequest.Participant.ToUpper()}";
+                string fallbackClassName = ToPascalCase(fallbackClassNameRaw);
+
                 className = fallbackClassName;
 
                 code =
@@ -196,6 +221,18 @@ namespace AIConnection.Services.ClassGeneration
             code = FormatCSharp(code);
 
             return (code, className);
+        }
+
+        private static string ToPascalCase(string input)
+        {
+            if (string.IsNullOrWhiteSpace(input))
+                return input;
+
+            var words = Regex.Split(input, @"[^a-zA-Z0-9]+");
+
+            return string.Concat(words
+                .Where(w => w.Length > 0)
+                .Select(w => char.ToUpperInvariant(w[0]) + w[1..].ToLowerInvariant()));
         }
 
         private static string IndentCode(string code, int level)
@@ -249,88 +286,11 @@ namespace AIConnection.Services.ClassGeneration
             return formattedRoot.ToFullString();
         }
 
-        private static string RetrieveQuestionIdentifier(QuestionType questionType)
-        {
-            string questionIdentifier = string.Empty;
-
-            switch (questionType)
-            {
-                case QuestionType.ARRAY_DIFFERENCE:
-                    questionIdentifier = "ArrayDifference";
-                    break;
-                case QuestionType.SEQUENCE_COMPARISON:
-                    questionIdentifier = "SequenceComparison";
-                    break;
-                case QuestionType.STRING_ARRAY_ENCODING:
-                    questionIdentifier = "StringArrayEncoding";
-                    break;
-            }
-
-            return questionIdentifier;
-        }
-
-        private static string RetrieveLlmIdentifier(LargeLanguageModelType llmType)
-        {
-            string llmIdentifier = string.Empty;
-
-            switch (llmType)
-            {
-                case LargeLanguageModelType.GTP:
-                    llmIdentifier = "Gpt";
-                    break;
-                case LargeLanguageModelType.CLAUDE:
-                    llmIdentifier = "Claude";
-                    break;
-                case LargeLanguageModelType.GEMINI:
-                    llmIdentifier = "Gemini";
-                    break;
-                case LargeLanguageModelType.DEEPSEEK:
-                    llmIdentifier = "DeepSeek";
-                    break;
-            }
-
-            return llmIdentifier;
-        }
-
-        private static string RetrieveParticipantIdentifier(string participant)
-        {
-            string paricipantIdentifier = string.Empty;
-
-            switch (participant.ToUpper())
-            {
-                case "PARTICIPANT_1":
-                    paricipantIdentifier = "Participant_1";
-                    break;
-                case "PARTICIPANT_2":
-                    paricipantIdentifier = "Participant_2";
-                    break;
-                case "PARTICIPANT_3":
-                    paricipantIdentifier = "Participant_3";
-                    break;
-                case "PARTICIPANT_4":
-                    paricipantIdentifier = "Participant_4";
-                    break;
-                case "PARTICIPANT_5":
-                    paricipantIdentifier = "Participant_5";
-                    break;
-                case "PARTICIPANT_6":
-                    paricipantIdentifier = "Participant_6";
-                    break;
-                case "PARTICIPANT_7":
-                    paricipantIdentifier = "Participant_7";
-                    break;
-            }
-
-            return paricipantIdentifier;
-        }
-
         private static void CreateFile(LargeLanguageModelRequest llmRequest, string className, string code)
         {
-            string llmIdentifier = RetrieveLlmIdentifier(llmRequest.LargeLanguageModel);
-            string questionIdentifier = RetrieveQuestionIdentifier(llmRequest.QuestionIdentifier);
-            string participantIdentifier = RetrieveParticipantIdentifier(llmRequest.Participant);
+            string projectName = $"{llmRequest.LargeLanguageModel}.{llmRequest.QuestionIdentifier}.{llmRequest.Seniority}.{llmRequest.Participant.ToUpper()}";
 
-            string folderPath = Path.Combine("..", "..", "GeneratedCodeByAI", "GeneratedCodeByAI", "GeneratedCode", llmIdentifier, questionIdentifier, participantIdentifier);
+            string folderPath = Path.Combine("..", "..", GENERATED_CODE_BY_AI, projectName);
             string filePath = Path.Combine(folderPath, $"{className}.cs");
 
 
