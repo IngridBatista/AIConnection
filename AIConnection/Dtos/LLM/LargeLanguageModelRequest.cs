@@ -8,6 +8,6 @@ namespace AIConnection.Dtos.LLM
         public QuestionType QuestionIdentifier { get; set; }
         public SeniorityType Seniority { get; set; }
         public required string Participant { get; set; }
-        public required string Propmpt { get; set; }
+        public required string Prompt { get; set; }
     }
 }

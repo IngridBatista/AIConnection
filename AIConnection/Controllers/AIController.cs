@@ -39,7 +39,7 @@ namespace AIConnection.Controllers
                     Temperature = DEFAULT_TEMPERATURE
                 };
 
-                var response = await _openAiClient.GetResponseAsync(llmRequest.Propmpt, options);
+                var response = await _openAiClient.GetResponseAsync(llmRequest.Prompt, options);
 
                 ClassGenerationService.CreateClassFile(llmRequest, response.Text);
 
@@ -61,7 +61,7 @@ namespace AIConnection.Controllers
             try
             {
                 var response = await _claudeService.SendMessageWithSystemAsync(
-                    userMessage: llmRequest.Propmpt,
+                    userMessage: llmRequest.Prompt,
                     systemPrompt: string.Empty,
                     model: "claude-sonnet-4-5-20250929",
                     temperature: 0.0,
@@ -95,7 +95,7 @@ namespace AIConnection.Controllers
                     Temperature = DEFAULT_TEMPERATURE
                 };
 
-                var response = await _geminiClient.GetResponseAsync(llmRequest.Propmpt, options);
+                var response = await _geminiClient.GetResponseAsync(llmRequest.Prompt, options);
 
                 ClassGenerationService.CreateClassFile(llmRequest, response.Text);
 
@@ -121,7 +121,7 @@ namespace AIConnection.Controllers
                     Temperature = DEFAULT_TEMPERATURE
                 };
 
-                var response = await _deepSeekClient.GetResponseAsync(llmRequest.Propmpt, options);
+                var response = await _deepSeekClient.GetResponseAsync(llmRequest.Prompt, options);
 
                 ClassGenerationService.CreateClassFile(llmRequest, response.Text);
 
