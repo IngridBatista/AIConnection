@@ -43,7 +43,7 @@ O projeto foi estruturado para gerar **84 projetos** de código (4 modelos × 3 
 
 ## Prompts utilizados
 
-Os 21 prompts abaixo (7 participantes × 3 questões) foram extraídos da [Postman Collection](https://github.com/IngridBatista/AIConnection) usada para popular a API. Cada prompt foi enviado, sem alterações, aos quatro endpoints (GPT, Claude, Gemini, DeepSeek), devido a isto o mesmo texto gera as 4 soluções comparadas para aquele participante/questão, totalizando as 84 execuções.
+Os 21 prompts abaixo (7 participantes × 3 questões) foram extraídos da [Postman Collection](https://github.com/IngridBatista/AIConnection/blob/main/Dataset_Pesquisa.postman_collection.json) usada para popular a API. Cada prompt foi enviado, sem alterações, aos quatro endpoints (GPT, Claude, Gemini, DeepSeek), devido a isto o mesmo texto gera as 4 soluções comparadas para aquele participante/questão, totalizando as 84 execuções.
 
 ### ArrayDifference
 
